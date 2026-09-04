@@ -33,9 +33,9 @@ publish-dry-run:
 publish-first:
     cargo publish
 
-# Preview what release-plz would do (opens a release PR locally without pushing)
+# Preview what release-plz would do (bump versions + changelog locally without committing)
 release-preview:
-    release-plz update --dry-run
+    release-plz update
 
 # Check what release-plz would release (dry-run)
 release-check:

@@ -14,12 +14,36 @@ https://github.com/luizvbo/exchange-rs
 
 ## Installation
 
-To install Exchange-rs, you need to have Rust installed on your machine. If you
-don't have Rust installed, you can install it using
-[rustup](https://rustup.rs/).
+### From crates.io
 
-Once you have Rust installed, you can clone the Exchange-rs repository and
-build the application using Cargo, Rust's package manager. Here are the steps:
+If you have [Rust](https://rustup.rs/) installed, the simplest way to install
+Exchange-rs is via Cargo:
+
+```bash
+cargo install exchange-rs
+```
+
+### From pre-built binaries (Linux, macOS, Windows)
+
+You can install a pre-built binary without needing Rust installed:
+
+```bash
+curl -sSfL https://raw.githubusercontent.com/luizvbo/exchange-rs/main/install.sh | sh
+```
+
+To install a specific version:
+
+```bash
+curl -sSfL https://raw.githubusercontent.com/luizvbo/exchange-rs/main/install.sh | sh -s -- --version 0.2.0
+```
+
+Alternatively, download the archive for your platform directly from the
+[releases page](https://github.com/luizvbo/exchange-rs/releases), extract it,
+and place the binary in your `PATH`.
+
+### From source
+
+To build from source, you need [Rust](https://rustup.rs/) installed:
 
 1. Clone the repository:
 
@@ -105,13 +129,43 @@ This will print something like:
 Contributions to Exchange-rs are welcome! Please feel free to open an issue or
 submit a pull request on GitHub.
 
-## Key Changes:
+## Releasing
 
-- **Name Update**: Changed the application name to Exchange-rs.
-- **Usage Instructions**: Added description of the new `FORMAT` argument that
-allows users to specify custom output formatting.
-- **Example Format Strings**: Included example format strings to show how users
-can control the output.
-- **Output Description**: Updated output example to reflect the new features
-and formatting options.
+Releases are automated using [release-plz](https://release-plz.dev/) for
+crates.io publishing and changelog generation, plus a hand-rolled GitHub Actions
+workflow for pre-built binaries.
+
+### Prerequisites
+
+- Use [conventional commit](https://www.conventionalcommits.org/) messages when
+  pushing to `main`:
+  - `feat:` — new feature (triggers a minor version bump)
+  - `fix:` — bug fix (triggers a patch version bump)
+  - `feat!:` — breaking change (triggers a major version bump)
+  - `chore:`, `docs:`, `ci:` — no release (ignored by release-plz)
+
+### Creating a release
+
+1. **Push your changes to `main`** using conventional commit messages.
+
+2. **release-plz opens a draft release PR** automatically. It contains the
+   version bump in `Cargo.toml` and an auto-generated `CHANGELOG.md`.
+
+3. **Review and merge the release PR.** Edit the changelog in the PR if you
+   want to adjust the release notes before merging.
+
+4. **release-plz publishes to crates.io** and creates a git tag (e.g.,
+   `v0.2.0`) and a GitHub Release with the changelog notes.
+
+5. **The tag push triggers the binary build workflow**, which builds
+   pre-built binaries for Linux, macOS, and Windows and uploads them to the
+   GitHub Release.
+
+### Previewing a release locally
+
+```bash
+just release-preview    # see what version bump + changelog release-plz would produce
+just release-check      # dry-run the release command
+just publish-dry-run    # verify the package is valid for crates.io
+```
 
