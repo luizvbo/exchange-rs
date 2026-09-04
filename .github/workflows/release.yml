@@ -1,0 +1,101 @@
+# Binary release workflow: builds pre-built binaries for multiple platforms
+# and uploads them to the GitHub Release created by release-plz.
+#
+# Triggered by tag pushes (v*.*.*) from release-plz. The GitHub Release
+# already exists (created by release-plz with changelog notes), so this
+# workflow only builds and attaches binaries.
+
+name: release
+permissions:
+  contents: write
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  build:
+    name: Build (${{ matrix.target }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            cross: true
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-musl
+            cross: true
+          - os: ubuntu-latest
+            target: aarch64-unknown-linux-gnu
+            cross: true
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            cross: false
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            cross: false
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            cross: false
+          - os: windows-latest
+            target: aarch64-pc-windows-msvc
+            cross: false
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Install cross
+        if: ${{ matrix.cross }}
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cross
+
+      - name: Setup cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.target }}
+
+      - name: Build binary
+        run: |
+          if [ "${{ matrix.cross }}" = "true" ]; then
+            cross build --release --locked --target=${{ matrix.target }}
+          else
+            cargo build --release --locked --target=${{ matrix.target }}
+          fi
+        shell: bash
+
+      - name: Package (Unix)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          mkdir -p dist
+          tar -czf dist/exchange-rs-${VERSION}-${{ matrix.target }}.tar.gz \
+            -C target/${{ matrix.target }}/release/ exchange-rs \
+            LICENSE README.md
+
+      - name: Package (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $VERSION = $env:GITHUB_REF_NAME -replace '^v', ''
+          $target = '${{ matrix.target }}'
+          New-Item -ItemType Directory -Force -Path dist
+          7z a "dist/exchange-rs-$VERSION-$target.zip" `
+            "target/$target/release/exchange-rs.exe" `
+            LICENSE README.md
+
+      - name: Upload to GitHub Release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload "${GITHUB_REF_NAME}" dist/* --clobber
