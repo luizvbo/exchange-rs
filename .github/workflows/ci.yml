@@ -5,50 +5,36 @@ name: CI
 
 on: [push]
 
-env:
-  MSRV_FEATURES: "--all-features"
-
 jobs:
-  crate_metadata:
-    name: Extract crate metadata
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4.1.1
-    - name: Extract crate information
-      id: crate_metadata
-      run: |
-        cargo metadata --no-deps --format-version 1 | jq -r '"msrv=" + .packages[0].rust_version' | tee -a $GITHUB_OUTPUT
-    outputs:
-      msrv: ${{ steps.crate_metadata.outputs.msrv }}
-
   lint:
     name: Lint
     runs-on: ubuntu-latest
     steps:
       - name: Checkout sources
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4
+
+      - name: Install stable toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
 
       - name: Run cargo fmt
-        uses: actions-rs/cargo@v1
-        continue-on-error: false
-        with:
-          command: fmt
-          args: --all -- --check
+        run: cargo fmt --all -- --check
 
       - name: Run cargo clippy
-        uses: actions-rs/cargo@v1
-        continue-on-error: false
-        with:
-          command: clippy
-          args: -- -D warnings
+        run: cargo clippy -- -D warnings
 
   build_and_test:
-    name: Build and Test (Linux)
-    runs-on: ubuntu-latest
+    name: Build and Test (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 10
     steps:
       - name: Checkout sources
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4
 
       - name: Install stable toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -56,4 +42,3 @@ jobs:
       - uses: taiki-e/install-action@nextest
       - name: 'Build and test'
         run: cargo nextest run --workspace --all-features
-

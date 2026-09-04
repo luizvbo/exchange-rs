@@ -80,7 +80,7 @@ jobs:
           mkdir -p dist
           tar -czf dist/exchange-rs-${VERSION}-${{ matrix.target }}.tar.gz \
             -C target/${{ matrix.target }}/release/ exchange-rs \
-            LICENSE README.md
+            -C "$GITHUB_WORKSPACE" LICENSE README.md
 
       - name: Package (Windows)
         if: runner.os == 'Windows'
