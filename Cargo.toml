@@ -3,8 +3,13 @@ name = "exchange-rs"
 version = "0.1.1"
 edition = "2021"
 authors = ["Luiz Otavio V. B. Oliveira <luiz.vbo@gmail.com>"]
+license = "MIT"
+description = "CLI tool to fetch real-time trading data from Euronext and output it in a customizable format"
 homepage = "https://github.com/luizvbo/exchange-rs"
 repository = "https://github.com/luizvbo/exchange-rs"
+readme = "README.md"
+keywords = ["finance", "euronext", "stock-market", "trading", "cli"]
+categories = ["command-line-utilities", "finance"]
 
 [dependencies]
 scraper = "0.21"
@@ -23,8 +28,3 @@ reqwest = { version = "0.12.9", features = [
 opt-level = "z"   # Optimize for size
 strip = true      # Strip debug information from the binary
 lto = "thin"      # Enable Link-Time Optimization (LTO)
-
-# The profile that 'dist' will build with
-[profile.dist]
-inherits = "release"
-lto = "thin"

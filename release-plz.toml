@@ -1,0 +1,8 @@
+[workspace]
+# Open release PRs as drafts so they don't auto-merge before review
+pr_draft = true
+pr_labels = ["release"]
+
+[changelog]
+# Generate changelog from conventional commits
+# https://www.conventionalcommits.org/
